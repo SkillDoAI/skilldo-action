@@ -1,0 +1,70 @@
+name: 'Skilldo — Generate SKILL.md'
+description: 'Run skilldo generate in CI to create or update SKILL.md for your library. Opens a PR or commits directly.'
+author: 'SkillDoAI'
+
+branding:
+  icon: 'book-open'
+  color: 'blue'
+
+inputs:
+  config:
+    description: 'Path to skilldo.toml config file (relative to path)'
+    required: false
+    default: 'skilldo.toml'
+  language:
+    description: 'Override language detection: python, javascript, rust, go'
+    required: false
+  output:
+    description: 'Output file path (relative to path)'
+    required: false
+    default: 'SKILL.md'
+  version:
+    description: 'Skilldo binary version (e.g., v0.4.0). Default: latest release.'
+    required: false
+    default: 'latest'
+  mode:
+    description: '"pr" to open a pull request, "commit" to commit to current branch'
+    required: false
+    default: 'pr'
+  pr-branch:
+    description: 'Branch name for PR mode'
+    required: false
+    default: 'skilldo/update-skill'
+  pr-title:
+    description: 'PR title'
+    required: false
+    default: 'chore: update SKILL.md'
+  path:
+    description: 'Subdirectory to generate from (for monorepos). Config and output are relative to this.'
+    required: false
+    default: '.'
+  github-token:
+    description: 'Token for git push and PR creation. Default GITHUB_TOKEN works for most repos.'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  changed:
+    description: 'true if SKILL.md was created or modified'
+    value: ${{ steps.run.outputs.changed }}
+  pr-url:
+    description: 'PR URL if one was created (empty otherwise)'
+    value: ${{ steps.run.outputs.pr-url }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run skilldo
+      id: run
+      shell: bash
+      env:
+        INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_LANGUAGE: ${{ inputs.language }}
+        INPUT_OUTPUT: ${{ inputs.output }}
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_PR_BRANCH: ${{ inputs.pr-branch }}
+        INPUT_PR_TITLE: ${{ inputs.pr-title }}
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: ${{ github.action_path }}/entrypoint.sh
