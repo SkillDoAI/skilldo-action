@@ -34,10 +34,11 @@ That's it. On every release, Skilldo generates a `SKILL.md` and opens a PR.
 
 | Input | Default | Description |
 |-------|---------|-------------|
+| `generate-mode` | `update` | `update` = use existing SKILL.md as input reference, `new` = generate from scratch |
 | `config` | `skilldo.toml` | Path to config file (relative to `path`) |
 | `language` | *(auto-detect)* | Override language: `python`, `javascript`, `rust`, `go` |
 | `output` | `SKILL.md` | Output file path (relative to `path`) |
-| `version` | `latest` | Skilldo binary version (e.g., `v0.4.0`) |
+| `version` | `latest` | Skilldo binary version (e.g., `v0.5.9`) |
 | `mode` | `pr` | `pr` = open a pull request, `commit` = commit to current branch |
 | `pr-branch` | `skilldo/update-skill` | Branch name for PR mode |
 | `pr-title` | `chore: update SKILL.md` | PR title |
@@ -114,6 +115,39 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 ```
+
+### Manual trigger with model selection
+
+Use `workflow_dispatch` for full control over when SKILL.md is generated. Only collaborators with write access can trigger it — safe from PR-based injection attacks.
+
+```yaml
+name: Generate SKILL.md
+on:
+  workflow_dispatch:
+    inputs:
+      generate-mode:
+        description: 'new = from scratch, update = use existing as reference'
+        default: 'update'
+        type: choice
+        options: [update, new]
+
+permissions:
+  contents: write
+
+jobs:
+  skilldo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: SkillDoAI/skilldo-action@v1
+        with:
+          mode: commit
+          generate-mode: ${{ inputs.generate-mode }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+```
+
+See [`examples/generate-skill.yml`](examples/generate-skill.yml) for a more complete example with model selection.
 
 ### Monorepo subdirectory
 
