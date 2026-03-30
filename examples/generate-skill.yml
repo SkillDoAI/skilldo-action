@@ -1,0 +1,62 @@
+# Example: Manual SKILL.md generation workflow.
+#
+# Copy this to .github/workflows/generate-skill.yml in your repo.
+# Only collaborators with write access can trigger it (workflow_dispatch).
+# Commits SKILL.md back to the selected branch for reviewer scrutiny.
+#
+# Prerequisites:
+#   - ANTHROPIC_API_KEY secret (org or repo level)
+#   - skilldo.toml in your repo root (see https://github.com/SkillDoAI/skilldo)
+#
+# Security: workflow_dispatch only — no pull_request_target, no PR author injection.
+
+name: Generate SKILL.md
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: 'Generation model'
+        default: 'haiku'
+        type: choice
+        options:
+          - haiku
+          - sonnet
+      generate-mode:
+        description: 'new = from scratch, update = use existing SKILL.md as reference'
+        default: 'update'
+        type: choice
+        options:
+          - update
+          - new
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    name: Generate SKILL.md
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+
+      # Optional: override the model in skilldo.toml before generation.
+      # Remove this step if your skilldo.toml already has the model you want.
+      - name: Set model in config
+        env:
+          MODEL_CHOICE: ${{ inputs.model }}
+        run: |
+          case "$MODEL_CHOICE" in
+            haiku)  MODEL="claude-haiku-4-5-20251001" ;;
+            sonnet) MODEL="claude-sonnet-4-6" ;;
+          esac
+          sed -i "s/model = \".*\"/model = \"${MODEL}\"/" skilldo.toml
+
+      - uses: SkillDoAI/skilldo-action@v1
+        with:
+          config: skilldo.toml
+          mode: commit
+          generate-mode: ${{ inputs.generate-mode }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

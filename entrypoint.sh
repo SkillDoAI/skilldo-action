@@ -63,6 +63,12 @@ if [ -n "${INPUT_LANGUAGE:-}" ]; then
   GENERATE_ARGS+=("--language" "${INPUT_LANGUAGE}")
 fi
 
+# Update mode: use existing SKILL.md as input reference
+if [ "${INPUT_GENERATE_MODE:-update}" = "update" ] && [ -f "${OUTPUT_PATH}" ]; then
+  GENERATE_ARGS+=("--input" "${OUTPUT_PATH}")
+  echo "Update mode: using existing ${OUTPUT_PATH} as input reference"
+fi
+
 echo "Running: skilldo generate ${GENERATE_ARGS[*]}"
 "${SKILLDO}" generate "${GENERATE_ARGS[@]}"
 

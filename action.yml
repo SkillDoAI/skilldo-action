@@ -7,6 +7,10 @@ branding:
   color: 'blue'
 
 inputs:
+  generate-mode:
+    description: '"new" generates from scratch, "update" uses existing SKILL.md as input reference'
+    required: false
+    default: 'update'
   config:
     description: 'Path to skilldo.toml config file (relative to path)'
     required: false
@@ -58,6 +62,7 @@ runs:
       id: run
       shell: bash
       env:
+        INPUT_GENERATE_MODE: ${{ inputs.generate-mode }}
         INPUT_CONFIG: ${{ inputs.config }}
         INPUT_LANGUAGE: ${{ inputs.language }}
         INPUT_OUTPUT: ${{ inputs.output }}
